@@ -265,9 +265,9 @@ def display_results(result, amount, type_transaction, oldbalance_org, newbalance
     st.plotly_chart(create_gauge_chart(result['fraud_probability']), 
                   use_container_width=True)
     
-    st.plotly_chart(create_probability_bar(result['fraud_probability'], 
-                                          result['legit_probability']),
-                  use_container_width=True)
+    # st.plotly_chart(create_probability_bar(result['fraud_probability'], 
+    #                                       result['legit_probability']),
+    #               use_container_width=True)
     
     
 def main():
