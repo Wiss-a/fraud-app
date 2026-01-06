@@ -10,9 +10,9 @@ import time
 # Configuration de la page
 st.set_page_config(
     page_title="Détection de Fraude - Système de Prédiction",
-    page_icon="🔐",
+    page_icon="🔒",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Styles CSS personnalisés
@@ -56,6 +56,19 @@ st.markdown("""
         50% { opacity: 0.7; }
         100% { opacity: 1; }
     }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        padding: 0 24px;
+        background-color: #f0f2f6;
+        border-radius: 8px 8px 0 0;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #667eea;
+        color: white;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -70,64 +83,15 @@ def load_model_and_scaler():
     except Exception as e:
         return None, None, str(e)
 
-# Fonction de prédiction
-# def predict_fraud(model, scaler, features_dict):
-#     """
-#     Effectue une prédiction de fraude
-    
-#     Args:
-#         model: Le modèle chargé
-#         scaler: Le scaler chargé
-#         features_dict: Dictionnaire des features
-    
-#     Returns:
-#         dict: Résultat de la prédiction
-#     """
-#     # Créer un DataFrame avec les features
-#     df = pd.DataFrame([features_dict])
-    
-#     # Normaliser les données
-#     features_scaled = scaler.transform(df)
-    
-#     # Prédiction
-#     prediction = model.predict(features_scaled)[0]
-#     probability = model.predict_proba(features_scaled)[0]
-    
-#     return {
-#         'is_fraud': bool(prediction),
-#         'fraud_probability': float(probability[1]),
-#         'legit_probability': float(probability[0]),
-#         'risk_level': 'ÉLEVÉ' if probability[1] >= 0.8 else ('MOYEN' if probability[1] >= 0.5 else 'FAIBLE'),
-#         'confidence': float(max(probability))
-#     }
 def predict_fraud(model, scaler, features_dict, custom_threshold=0.3):
-    """
-    Effectue une prédiction de fraude avec seuil personnalisable
-    
-    Args:
-        model: Le modèle chargé
-        scaler: Le scaler chargé
-        features_dict: Dictionnaire des features
-        custom_threshold: seuil de fraude pour alerter (ex: 0.3 = 30%)
-    
-    Returns:
-        dict: Résultat de la prédiction
-    """
-    # Créer un DataFrame avec les features
+    """Effectue une prédiction de fraude avec seuil personnalisable"""
     df = pd.DataFrame([features_dict])
-    
-    # Normaliser les données
     features_scaled = scaler.transform(df)
-    
-    # Prédiction
     probability = model.predict_proba(features_scaled)[0]
     fraud_prob = float(probability[1])
     legit_prob = float(probability[0])
-    
-    # Déterminer le statut selon le seuil personnalisé
     is_fraud = fraud_prob >= custom_threshold
     
-    # Niveau de risque ajusté
     if fraud_prob >= 0.8:
         risk_level = 'ÉLEVÉ'
     elif fraud_prob >= 0.5:
@@ -145,12 +109,9 @@ def predict_fraud(model, scaler, features_dict, custom_threshold=0.3):
         'confidence': float(max(probability))
     }
 
-# Fonction pour créer les features à partir des inputs
 def create_features(step, type_transaction, amount, oldbalance_org, newbalance_orig, 
                    oldbalance_dest, newbalance_dest):
-    """Crée le dictionnaire de features à partir des inputs """
-    
-    # Initialiser toutes les features
+    """Crée le dictionnaire de features à partir des inputs"""
     features = {
         'step': step,
         'amount': amount,
@@ -160,12 +121,10 @@ def create_features(step, type_transaction, amount, oldbalance_org, newbalance_o
         'newbalanceDest': newbalance_dest
     }
     
-    # One-hot encoding pour le type de transaction
     transaction_types = ['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER']
     for t_type in transaction_types:
         features[f'type_{t_type}'] = 1 if type_transaction == t_type else 0
     
-    # Features dérivées
     features['balanceChange_orig'] = oldbalance_org - newbalance_orig
     features['balanceChange_dest'] = newbalance_dest - oldbalance_dest
     features['amountToBalanceRatio_orig'] = amount / (oldbalance_org + 1)
@@ -176,14 +135,13 @@ def create_features(step, type_transaction, amount, oldbalance_org, newbalance_o
     
     return features
 
-# Fonction pour afficher la jauge de probabilité
 def create_gauge_chart(probability):
     """Crée un graphique de jauge pour la probabilité de fraude"""
     fig = go.Figure(go.Indicator(
         mode="gauge+number+delta",
         value=probability * 100,
         domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Probabilité de Fraude (%)", 'font': {'size': 24}},
+        title={'text': "Probabilité de Fraude (%)", 'font': {'size': 20}},
         delta={'reference': 50, 'increasing': {'color': "red"}},
         gauge={
             'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -204,14 +162,9 @@ def create_gauge_chart(probability):
         }
     ))
     
-    fig.update_layout(
-        height=300,
-        margin=dict(l=20, r=20, t=50, b=20)
-    )
-    
+    fig.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
     return fig
 
-# Fonction pour créer un graphique de probabilités comparatives
 def create_probability_bar(fraud_prob, legit_prob):
     """Crée un graphique en barres pour comparer les probabilités"""
     fig = go.Figure()
@@ -227,41 +180,89 @@ def create_probability_bar(fraud_prob, legit_prob):
     fig.update_layout(
         title="Comparaison des Probabilités",
         yaxis_title="Probabilité (%)",
-        height=300,
+        height=250,
         showlegend=False
     )
     
     return fig
 
-# Fonction pour afficher l'historique des prédictions
-def display_prediction_history(history):
-    """Affiche l'historique des prédictions dans un graphique"""
-    if len(history) > 0:
-        df_history = pd.DataFrame(history)
-        
-        fig = px.line(
-            df_history, 
-            x='timestamp', 
-            y='fraud_probability',
-            title='Évolution des Probabilités de Fraude',
-            labels={'fraud_probability': 'Probabilité de Fraude', 'timestamp': 'Temps'}
+def display_results(result, amount, type_transaction, oldbalance_org, newbalance_orig, 
+                   oldbalance_dest, newbalance_dest, step):
+    """Affiche les résultats de la prédiction"""
+    # Alerte principale
+    if result['is_fraud']:
+        st.markdown(
+            f'<div class="fraud-alert">⚠️ ALERTE FRAUDE DÉTECTÉE ⚠️<br>Niveau de Risque: {result["risk_level"]}</div>',
+            unsafe_allow_html=True
         )
-        
-        fig.add_hline(y=0.5, line_dash="dash", line_color="orange", 
-                     annotation_text="Seuil de décision")
-        fig.add_hline(y=0.8, line_dash="dash", line_color="red", 
-                     annotation_text="Seuil d'alerte")
-        
-        fig.update_layout(height=300)
-        
-        return fig
-    return None
+    else:
+        st.markdown(
+            '<div class="legit-alert">✅ Transaction Légitime</div>',
+            unsafe_allow_html=True
+        )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Métriques
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric(
+            "Probabilité de Fraude",
+            f"{result['fraud_probability']*100:.2f}%",
+            delta=f"{(result['fraud_probability']-0.5)*100:.1f}%" if result['fraud_probability'] > 0.5 else None,
+            delta_color="inverse"
+        )
+    
+    with col2:
+        st.metric(
+            "Probabilité Légitime",
+            f"{result['legit_probability']*100:.2f}%"
+        )
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.metric(
+            "Niveau de Risque",
+            result['risk_level'],
+            delta="ALERTE" if result['risk_level'] == "ÉLEVÉ" else None,
+            delta_color="inverse"
+        )
+    
+    with col4:
+        st.metric(
+            "Confiance",
+            f"{result['confidence']*100:.1f}%"
+        )
+    
+    # Graphiques
+    st.plotly_chart(create_gauge_chart(result['fraud_probability']), 
+                  use_container_width=True)
+    
+    st.plotly_chart(create_probability_bar(result['fraud_probability'], 
+                                          result['legit_probability']),
+                  use_container_width=True)
+    
+    # Détails de la transaction
+    st.markdown("---")
+    st.subheader("📋 Détails")
+    
+    st.write("**Informations de Base:**")
+    st.write(f"- Type: {type_transaction}")
+    st.write(f"- Montant: {amount:,.2f} €")
+    st.write(f"- Step: {step}")
+    
+    st.write("**Analyse des Comptes:**")
+    balance_change_orig = oldbalance_org - newbalance_orig
+    balance_change_dest = newbalance_dest - oldbalance_dest
+    st.write(f"- Variation Origine: {balance_change_orig:,.2f} €")
+    st.write(f"- Variation Destination: {balance_change_dest:,.2f} €")
+    st.write(f"- Ratio Montant/Solde: {amount/(oldbalance_org+1)*100:.2f}%")
 
-# Interface principale
 def main():
     # En-tête
-    st.markdown('<h1 class="main-header">🔐 Système de Détection de Fraude</h1>', unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown('<h1 class="main-header">🔒 Système de Détection de Fraude</h1>', unsafe_allow_html=True)
     
     # Chargement du modèle
     model, scaler, error = load_model_and_scaler()
@@ -272,173 +273,95 @@ def main():
         return
     
     st.success("✅ Modèle chargé avec succès !")
+    st.markdown("---")
     
-    # Initialiser l'historique dans session_state
-    if 'prediction_history' not in st.session_state:
-        st.session_state.prediction_history = []
+    # Initialiser l'état de session pour les résultats
+    if 'current_result' not in st.session_state:
+        st.session_state.current_result = None
+    if 'current_transaction' not in st.session_state:
+        st.session_state.current_transaction = None
     
-    # Sidebar - Mode de saisie
-    st.sidebar.title("⚙️ Configuration")
-    input_mode = st.sidebar.radio(
-        "Mode de saisie",
-        ["📝 Saisie Manuelle", "📁 Import CSV"]
-    )
+    # Tabs pour les différents modes
+    tab1, tab2 = st.tabs(["📝 Saisie Manuelle", "📁 Import CSV"])
     
-    # st.sidebar.markdown("---")
-    # st.sidebar.markdown("### 📊 Statistiques de Session")
-    # st.sidebar.metric("Prédictions Effectuées", len(st.session_state.prediction_history))
-    
-    # if len(st.session_state.prediction_history) > 0:
-    #     fraud_count = sum(1 for p in st.session_state.prediction_history if p['is_fraud'])
-    #     st.sidebar.metric("Fraudes Détectées", fraud_count)
-    #     st.sidebar.metric("Taux de Fraude", f"{fraud_count/len(st.session_state.prediction_history)*100:.1f}%")
-    
-    # # Bouton pour réinitialiser l'historique
-    # if st.sidebar.button("🔄 Réinitialiser l'Historique"):
-    #     st.session_state.prediction_history = []
-    #     st.rerun()
-    
-    # Mode Saisie Manuelle
-    if input_mode == "📝 Saisie Manuelle":
-        st.header("Saisir les Détails de la Transaction")
+    # TAB 1: Saisie Manuelle
+    with tab1:
+        col_left, col_right = st.columns([1, 1])
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.subheader("Informations Générales")
-            step = st.number_input("Step (Heure)", min_value=0, max_value=744, value=1, 
-                                  help="Unité de temps (1 step = 1 heure)")
-            type_transaction = st.selectbox(
-                "Type de Transaction",
-                ["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
-            )
-            amount = st.number_input("Montant", min_value=0.0, value=10000.0, step=100.0,
-                                    help="Montant de la transaction")
-        
-        with col2:
-            st.subheader("Compte Origine")
-            oldbalance_org = st.number_input("Solde Initial", min_value=0.0, value=50000.0, 
-                                            step=1000.0, key="old_orig")
-            newbalance_orig = st.number_input("Nouveau Solde", min_value=0.0, value=40000.0, 
-                                             step=1000.0, key="new_orig")
-        
-        with col3:
-            st.subheader("Compte Destination")
-            oldbalance_dest = st.number_input("Solde Initial", min_value=0.0, value=0.0, 
-                                             step=1000.0, key="old_dest")
-            newbalance_dest = st.number_input("Nouveau Solde", min_value=0.0, value=10000.0, 
-                                             step=1000.0, key="new_dest")
-        
-        # Bouton de prédiction
-        st.markdown("---")
-        predict_button = st.button("🔍 Analyser la Transaction", type="primary", use_container_width=True)
-        
-        if predict_button:
-            # Créer les features
-            features = create_features(
-                step, type_transaction, amount, oldbalance_org, 
-                newbalance_orig, oldbalance_dest, newbalance_dest
-            )
+        with col_left:
+            st.header("Formulaire de Transaction")
             
-            # Faire la prédiction avec animation
-            with st.spinner("Analyse en cours..."):
-                progress_bar = st.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress_bar.progress(i + 1)
+            with st.form("transaction_form"):
+                st.subheader("Informations Générales")
+                step = st.number_input("Step (Heure)", min_value=0, max_value=744, value=1, 
+                                      help="Unité de temps (1 step = 1 heure)")
+                type_transaction = st.selectbox(
+                    "Type de Transaction",
+                    ["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
+                )
+                amount = st.number_input("Montant (€)", min_value=0.0, value=10000.0, step=100.0,
+                                        help="Montant de la transaction")
                 
-                result = predict_fraud(model, scaler, features)
+                st.markdown("---")
+                st.subheader("Compte Origine")
+                oldbalance_org = st.number_input("Solde Initial", min_value=0.0, value=50000.0, 
+                                                step=1000.0, key="old_orig")
+                newbalance_orig = st.number_input("Nouveau Solde", min_value=0.0, value=40000.0, 
+                                                 step=1000.0, key="new_orig")
+                
+                st.markdown("---")
+                st.subheader("Compte Destination")
+                oldbalance_dest = st.number_input("Solde Initial", min_value=0.0, value=0.0, 
+                                                 step=1000.0, key="old_dest")
+                newbalance_dest = st.number_input("Nouveau Solde", min_value=0.0, value=10000.0, 
+                                                 step=1000.0, key="new_dest")
+                
+                # Bouton de soumission
+                submitted = st.form_submit_button("🔍 Analyser la Transaction", type="primary", use_container_width=True)
+                
+                if submitted:
+                    # Créer les features
+                    features = create_features(
+                        step, type_transaction, amount, oldbalance_org, 
+                        newbalance_orig, oldbalance_dest, newbalance_dest
+                    )
+                    
+                    # Faire la prédiction
+                    with st.spinner("Analyse en cours..."):
+                        result = predict_fraud(model, scaler, features)
+                    
+                    # Stocker les résultats dans session_state
+                    st.session_state.current_result = result
+                    st.session_state.current_transaction = {
+                        'amount': amount,
+                        'type': type_transaction,
+                        'oldbalance_org': oldbalance_org,
+                        'newbalance_orig': newbalance_orig,
+                        'oldbalance_dest': oldbalance_dest,
+                        'newbalance_dest': newbalance_dest,
+                        'step': step
+                    }
+                    st.rerun()
+        
+        with col_right:
+            st.header("Résultats de l'Analyse")
             
-            # Ajouter à l'historique
-            result['timestamp'] = datetime.now()
-            result['amount'] = amount
-            result['type'] = type_transaction
-            st.session_state.prediction_history.append(result)
-            
-            # Afficher les résultats
-            st.markdown("---")
-            st.header("📊 Résultat de l'Analyse")
-            
-            # Alerte principale
-            if result['is_fraud']:
-                st.markdown(
-                    f'<div class="fraud-alert">⚠️ ALERTE FRAUDE DÉTECTÉE ⚠️<br>Niveau de Risque: {result["risk_level"]}</div>',
-                    unsafe_allow_html=True
+            if st.session_state.current_result is not None:
+                display_results(
+                    st.session_state.current_result,
+                    st.session_state.current_transaction['amount'],
+                    st.session_state.current_transaction['type'],
+                    st.session_state.current_transaction['oldbalance_org'],
+                    st.session_state.current_transaction['newbalance_orig'],
+                    st.session_state.current_transaction['oldbalance_dest'],
+                    st.session_state.current_transaction['newbalance_dest'],
+                    st.session_state.current_transaction['step']
                 )
             else:
-                st.markdown(
-                    '<div class="legit-alert">✅ Transaction Légitime</div>',
-                    unsafe_allow_html=True
-                )
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Métriques
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric(
-                    "Probabilité de Fraude",
-                    f"{result['fraud_probability']*100:.2f}%",
-                    delta=f"{(result['fraud_probability']-0.5)*100:.1f}%" if result['fraud_probability'] > 0.5 else None,
-                    delta_color="inverse"
-                )
-            
-            with col2:
-                st.metric(
-                    "Probabilité Légitime",
-                    f"{result['legit_probability']*100:.2f}%"
-                )
-            
-            with col3:
-                st.metric(
-                    "Niveau de Risque",
-                    result['risk_level'],
-                    delta="ALERTE" if result['risk_level'] == "ÉLEVÉ" else None,
-                    delta_color="inverse"
-                )
-            
-            with col4:
-                st.metric(
-                    "Confiance",
-                    f"{result['confidence']*100:.1f}%"
-                )
-            
-            # Graphiques
-            st.markdown("---")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.plotly_chart(create_gauge_chart(result['fraud_probability']), 
-                              use_container_width=True)
-            
-            with col2:
-                st.plotly_chart(create_probability_bar(result['fraud_probability'], 
-                                                      result['legit_probability']),
-                              use_container_width=True)
-            
-            # Détails de la transaction
-            st.markdown("---")
-            st.subheader("📋 Détails de la Transaction")
-            
-            details_col1, details_col2 = st.columns(2)
-            
-            with details_col1:
-                st.write("**Informations de Base:**")
-                st.write(f"- Type: {type_transaction}")
-                st.write(f"- Montant: {amount:,.2f} €")
-                st.write(f"- Step: {step}")
-            
-            with details_col2:
-                st.write("**Analyse des Comptes:**")
-                balance_change_orig = oldbalance_org - newbalance_orig
-                balance_change_dest = newbalance_dest - oldbalance_dest
-                st.write(f"- Variation Origine: {balance_change_orig:,.2f} €")
-                st.write(f"- Variation Destination: {balance_change_dest:,.2f} €")
-                st.write(f"- Ratio Montant/Solde: {amount/(oldbalance_org+1)*100:.2f}%")
+                st.info("👈 Remplissez le formulaire et cliquez sur 'Analyser' pour voir les résultats ici")
     
-    # Mode Import CSV
-    elif input_mode == "📁 Import CSV":
+    # TAB 2: Import CSV
+    with tab2:
         st.header("Importer un Fichier de Transactions")
         
         uploaded_file = st.file_uploader(
@@ -463,19 +386,16 @@ def main():
                     results = []
                     
                     for idx, row in df.iterrows():
-                        # Créer les features
                         features = create_features(
                             row['step'], row['type'], row['amount'],
                             row['oldbalanceOrg'], row['newbalanceOrig'],
                             row['oldbalanceDest'], row['newbalanceDest']
                         )
                         
-                        # Prédiction
                         result = predict_fraud(model, scaler, features)
                         result['transaction_id'] = idx
                         results.append(result)
                         
-                        # Mettre à jour la barre de progression
                         progress_bar.progress((idx + 1) / len(df))
                 
                 # Créer un DataFrame des résultats
@@ -509,7 +429,6 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    # Distribution des probabilités
                     fig_dist = px.histogram(
                         df, x='fraud_probability',
                         title='Distribution des Probabilités de Fraude',
@@ -519,7 +438,6 @@ def main():
                     st.plotly_chart(fig_dist, use_container_width=True)
                 
                 with col2:
-                    # Fraude par type de transaction
                     fraud_by_type = df.groupby('type')['is_fraud_predicted'].sum().reset_index()
                     fig_type = px.bar(
                         fraud_by_type, x='type', y='is_fraud_predicted',
@@ -550,102 +468,6 @@ def main():
                     file_name=f'fraud_analysis_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
                     mime='text/csv',
                 )
-    
-    # Mode Données Aléatoires
-    # else:  # Données Aléatoires
-    #     st.header("Générer et Analyser des Transactions Aléatoires")
-        
-    #     col1, col2 = st.columns(2)
-        
-    #     with col1:
-    #         num_transactions = st.slider("Nombre de transactions", 1, 100, 10)
-        
-    #     with col2:
-    #         transaction_type = st.selectbox(
-    #             "Type de transaction",
-    #             ["Tous", "PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
-    #         )
-        
-    #     if st.button("🎲 Générer et Analyser", type="primary"):
-    #         with st.spinner("Génération et analyse en cours..."):
-    #             progress_bar = st.progress(0)
-    #             results = []
-                
-    #             for i in range(num_transactions):
-    #                 # Générer des données aléatoires
-    #                 if transaction_type == "Tous":
-    #                     t_type = np.random.choice(["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"])
-    #                 else:
-    #                     t_type = transaction_type
-                    
-    #                 step = np.random.randint(1, 744)
-    #                 amount = np.random.uniform(100, 100000)
-    #                 oldbalance_org = np.random.uniform(0, 200000)
-    #                 newbalance_orig = max(0, oldbalance_org - amount + np.random.uniform(-1000, 1000))
-    #                 oldbalance_dest = np.random.uniform(0, 200000)
-    #                 newbalance_dest = oldbalance_dest + amount + np.random.uniform(-1000, 1000)
-                    
-    #                 # Créer features et prédire
-    #                 features = create_features(
-    #                     step, t_type, amount, oldbalance_org,
-    #                     newbalance_orig, oldbalance_dest, newbalance_dest
-    #                 )
-                    
-    #                 result = predict_fraud(model, scaler, features)
-    #                 result['type'] = t_type
-    #                 result['amount'] = amount
-    #                 result['timestamp'] = datetime.now()
-    #                 results.append(result)
-                    
-    #                 progress_bar.progress((i + 1) / num_transactions)
-                
-    #             # Ajouter à l'historique
-    #             st.session_state.prediction_history.extend(results)
-            
-    #         # Afficher les résultats
-    #         st.markdown("---")
-    #         st.success(f"✅ {num_transactions} transactions générées et analysées!")
-            
-    #         # Statistiques
-    #         fraud_count = sum(1 for r in results if r['is_fraud'])
-            
-    #         col1, col2, col3 = st.columns(3)
-    #         with col1:
-    #             st.metric("Transactions Générées", num_transactions)
-    #         with col2:
-    #             st.metric("Fraudes Détectées", fraud_count)
-    #         with col3:
-    #             st.metric("Taux de Fraude", f"{fraud_count/num_transactions*100:.1f}%")
-            
-    #         # Tableau des résultats
-    #         st.markdown("---")
-    #         results_df = pd.DataFrame(results)
-    #         st.dataframe(results_df[['type', 'amount', 'is_fraud', 'fraud_probability', 'risk_level']], 
-    #                     use_container_width=True)
-    
-    # Section Historique (visible dans tous les modes)
-    # if len(st.session_state.prediction_history) > 0:
-    #     st.markdown("---")
-    #     st.header("📈 Historique des Prédictions")
-        
-    #     fig_history = display_prediction_history(st.session_state.prediction_history)
-    #     if fig_history:
-    #         st.plotly_chart(fig_history, use_container_width=True)
-        
-    #     # Statistiques de l'historique
-    #     col1, col2, col3 = st.columns(3)
-        
-    #     with col1:
-    #         avg_prob = np.mean([p['fraud_probability'] for p in st.session_state.prediction_history])
-    #         st.metric("Probabilité Moyenne", f"{avg_prob*100:.2f}%")
-        
-    #     with col2:
-    #         fraud_count = sum(1 for p in st.session_state.prediction_history if p['is_fraud'])
-    #         st.metric("Total Fraudes", fraud_count)
-        
-    #     with col3:
-    #         high_risk = sum(1 for p in st.session_state.prediction_history if p['risk_level'] == 'ÉLEVÉ')
-    #         st.metric("Alertes Élevées", high_risk)
 
 if __name__ == "__main__":
     main()
