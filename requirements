@@ -1,0 +1,12 @@
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+pyarrow==22.0.0
+joblib==1.5.3
+scipy==1.15.3
+python-dateutil==2.9.0.post0
+pytz==2025.2
+threadpoolctl==3.6.0
+six==1.17.0
+tzdata==2025.3
+streamlit==1.26.0   # or whatever version you used locally
