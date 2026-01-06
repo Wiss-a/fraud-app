@@ -271,9 +271,7 @@ def main():
         st.error(f"❌ Erreur lors du chargement du modèle: {error}")
         st.info("Assurez-vous que les fichiers 'best_fraud_detection_model.pkl' et 'scaler.pkl' sont dans le même répertoire.")
         return
-    
-    st.success("✅ Modèle chargé avec succès !")
-    st.markdown("---")
+ 
     
     # Initialiser l'état de session pour les résultats
     if 'current_result' not in st.session_state:
