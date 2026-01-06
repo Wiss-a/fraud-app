@@ -1,0 +1,210 @@
+name: Monitoring & Scheduled Tasks
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC for weekly performance check
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  # ==================== MODEL PERFORMANCE MONITORING ====================
+  model-performance-check:
+    name: Weekly Model Performance Review
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install dependencies
+      run: |
+        pip install pandas numpy scikit-learn
+
+    - name: 📊 Generate Performance Report
+      run: |
+        python << 'EOF'
+        import pickle
+        import os
+        from datetime import datetime
+
+        print("=" * 60)
+        print("📊 WEEKLY MODEL PERFORMANCE REPORT")
+        print(f"📅 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 60)
+        print()
+
+        models = {
+            'Best Model': 'best_fraud_detection_model.pkl',
+            'LightGBM': 'model_LightGBM.pkl',
+            'Random Forest Baseline': 'model_Random_Forest_Baseline.pkl',
+            'Random Forest Optimized': 'model_Random_Forest_Optimisé.pkl',
+            'XGBoost': 'model_XGBoost.pkl'
+        }
+
+        print("📈 Model Status Check:")
+        print()
+        
+        for name, filepath in models.items():
+            if os.path.exists(filepath):
+                size_mb = os.path.getsize(filepath) / (1024 * 1024)
+                try:
+                    with open(filepath, 'rb') as f:
+                        model = pickle.load(f)
+                    status = "✅ OK"
+                except:
+                    status = "❌ CORRUPTED"
+                
+                print(f"  {name:30s} - {status} ({size_mb:.2f} MB)")
+            else:
+                print(f"  {name:30s} - ⚠️  NOT FOUND")
+        
+        print()
+        print("=" * 60)
+        print("💡 Recommendations:")
+        print("  1. Review model accuracy metrics if available")
+        print("  2. Consider retraining if data drift detected")
+        print("  3. Monitor prediction latency in production")
+        print("=" * 60)
+        EOF
+
+    - name: 🔔 Create Issue if Problems Found
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '⚠️ Model Performance Check Failed',
+            body: `The weekly model performance check has detected issues.
+            
+            **Details:**
+            - Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - Date: ${new Date().toISOString()}
+            
+            **Action Required:**
+            Please review the workflow logs and investigate model integrity.`,
+            labels: ['monitoring', 'automated']
+          });
+
+  # ==================== DEPENDENCY SECURITY AUDIT ====================
+  security-audit:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 🔒 Install Safety
+      run: pip install safety
+
+    - name: 🛡️ Run Security Audit
+      run: |
+        echo "🔍 Scanning dependencies for known vulnerabilities..."
+        safety check --file requirements.txt --json --output security-report.json || true
+        
+        echo ""
+        echo "📊 Security Scan Complete"
+        echo "Review the report in the workflow artifacts"
+
+    - name: 📦 Upload Security Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-audit-report
+        path: security-report.json
+        retention-days: 90
+
+  # ==================== APPLICATION HEALTH CHECK ====================
+  health-check:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 🏥 Check Application Status
+      run: |
+        echo "🔍 Checking production application health..."
+        
+        # Replace with your actual production URL
+        APP_URL="https://fraud-detection-app.azurewebsites.net"
+        
+        echo "Testing: $APP_URL"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" $APP_URL || echo "000")
+        
+        echo "HTTP Status Code: $HTTP_CODE"
+        
+        if [ "$HTTP_CODE" -eq "200" ] || [ "$HTTP_CODE" -eq "302" ]; then
+          echo "✅ Application is healthy!"
+          exit 0
+        else
+          echo "❌ Application returned HTTP $HTTP_CODE"
+          exit 1
+        fi
+
+    - name: 🔔 Alert on Failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Production Health Check Failed',
+            body: `The production application health check has failed.
+            
+            **Details:**
+            - Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - Timestamp: ${new Date().toISOString()}
+            
+            **Action Required:**
+            Please investigate the production deployment immediately.`,
+            labels: ['critical', 'production', 'automated']
+          });
+
+  # ==================== RESOURCE CLEANUP ====================
+  cleanup-old-artifacts:
+    name: Cleanup Old Artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🧹 Delete Old Workflow Artifacts
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const artifacts = await github.rest.actions.listArtifactsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          let deletedCount = 0;
+          
+          for (const artifact of artifacts.data.artifacts) {
+            const createdAt = new Date(artifact.created_at);
+            
+            if (createdAt < thirtyDaysAgo) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+              deletedCount++;
+            }
+          }
+          
+          console.log(`🗑️ Deleted ${deletedCount} old artifacts`);
