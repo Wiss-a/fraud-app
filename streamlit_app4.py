@@ -18,16 +18,28 @@ st.set_page_config(
 # Styles CSS personnalisés
 st.markdown("""
     <style>
+    .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    }
+
     .main-header {
         font-size: 3rem;
         font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        padding: 20px;
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        margin: 0;
     }
+
+    .icon-left,
+    .icon-right {
+        font-size: 3rem;
+        color: #1f77b4;   /* any color you like */
+    }
+
     .metric-card {
         background-color: #f0f2f6;
         padding: 20px;
@@ -262,7 +274,13 @@ def display_results(result, amount, type_transaction, oldbalance_org, newbalance
 
 def main():
     # En-tête
-    st.markdown('🔒<h1 class="main-header"> Système de Détection de Fraude </h1>💳', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="header-container">
+        <span class="icon-left">🔒</span>
+        <h1 class="main-header">Système de Détection de Fraude</h1>
+        <span class="icon-right">💳</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Chargement du modèle
     model, scaler, error = load_model_and_scaler()
