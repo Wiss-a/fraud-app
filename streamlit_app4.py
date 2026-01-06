@@ -841,100 +841,100 @@ def main():
                     )
     
     # Mode Données Aléatoires
-    # else:  # Données Aléatoires
-    #     st.header("Générer et Analyser des Transactions Aléatoires")
+    else:  # Données Aléatoires
+        st.header("Générer et Analyser des Transactions Aléatoires")
         
-    #     col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
         
-    #     with col1:
-    #         num_transactions = st.slider("Nombre de transactions", 1, 100, 10)
+        with col1:
+            num_transactions = st.slider("Nombre de transactions", 1, 100, 10)
         
-    #     with col2:
-    #         transaction_type = st.selectbox(
-    #             "Type de transaction",
-    #             ["Tous", "PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
-    #         )
+        with col2:
+            transaction_type = st.selectbox(
+                "Type de transaction",
+                ["Tous", "PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
+            )
         
-    #     if st.button("🎲 Générer et Analyser", type="primary"):
-    #         with st.spinner("Génération et analyse en cours..."):
-    #             progress_bar = st.progress(0)
-    #             results = []
+        if st.button("🎲 Générer et Analyser", type="primary"):
+            with st.spinner("Génération et analyse en cours..."):
+                progress_bar = st.progress(0)
+                results = []
                 
-    #             for i in range(num_transactions):
-    #                 # Générer des données aléatoires
-    #                 if transaction_type == "Tous":
-    #                     t_type = np.random.choice(["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"])
-    #                 else:
-    #                     t_type = transaction_type
+                for i in range(num_transactions):
+                    # Générer des données aléatoires
+                    if transaction_type == "Tous":
+                        t_type = np.random.choice(["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"])
+                    else:
+                        t_type = transaction_type
                     
-    #                 step = np.random.randint(1, 744)
-    #                 amount = np.random.uniform(100, 100000)
-    #                 oldbalance_org = np.random.uniform(0, 200000)
-    #                 newbalance_orig = max(0, oldbalance_org - amount + np.random.uniform(-1000, 1000))
-    #                 oldbalance_dest = np.random.uniform(0, 200000)
-    #                 newbalance_dest = oldbalance_dest + amount + np.random.uniform(-1000, 1000)
+                    step = np.random.randint(1, 744)
+                    amount = np.random.uniform(100, 100000)
+                    oldbalance_org = np.random.uniform(0, 200000)
+                    newbalance_orig = max(0, oldbalance_org - amount + np.random.uniform(-1000, 1000))
+                    oldbalance_dest = np.random.uniform(0, 200000)
+                    newbalance_dest = oldbalance_dest + amount + np.random.uniform(-1000, 1000)
                     
-    #                 # Créer features et prédire
-    #                 features = create_features(
-    #                     step, t_type, amount, oldbalance_org,
-    #                     newbalance_orig, oldbalance_dest, newbalance_dest
-    #                 )
+                    # Créer features et prédire
+                    features = create_features(
+                        step, t_type, amount, oldbalance_org,
+                        newbalance_orig, oldbalance_dest, newbalance_dest
+                    )
                     
-    #                 result = predict_fraud(model, scaler, features)
-    #                 result['type'] = t_type
-    #                 result['amount'] = amount
-    #                 result['timestamp'] = datetime.now()
-    #                 results.append(result)
+                    result = predict_fraud(model, scaler, features)
+                    result['type'] = t_type
+                    result['amount'] = amount
+                    result['timestamp'] = datetime.now()
+                    results.append(result)
                     
-    #                 progress_bar.progress((i + 1) / num_transactions)
+                    progress_bar.progress((i + 1) / num_transactions)
                 
-    #             # Ajouter à l'historique
-    #             st.session_state.prediction_history.extend(results)
+                # Ajouter à l'historique
+                st.session_state.prediction_history.extend(results)
             
-    #         # Afficher les résultats
-    #         st.markdown("---")
-    #         st.success(f"✅ {num_transactions} transactions générées et analysées!")
+            # Afficher les résultats
+            st.markdown("---")
+            st.success(f"✅ {num_transactions} transactions générées et analysées!")
             
-    #         # Statistiques
-    #         fraud_count = sum(1 for r in results if r['is_fraud'])
+            # Statistiques
+            fraud_count = sum(1 for r in results if r['is_fraud'])
             
-    #         col1, col2, col3 = st.columns(3)
-    #         with col1:
-    #             st.metric("Transactions Générées", num_transactions)
-    #         with col2:
-    #             st.metric("Fraudes Détectées", fraud_count)
-    #         with col3:
-    #             st.metric("Taux de Fraude", f"{fraud_count/num_transactions*100:.1f}%")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Transactions Générées", num_transactions)
+            with col2:
+                st.metric("Fraudes Détectées", fraud_count)
+            with col3:
+                st.metric("Taux de Fraude", f"{fraud_count/num_transactions*100:.1f}%")
             
-    #         # Tableau des résultats
-    #         st.markdown("---")
-    #         results_df = pd.DataFrame(results)
-    #         st.dataframe(results_df[['type', 'amount', 'is_fraud', 'fraud_probability', 'risk_level']], 
-    #                     use_container_width=True)
+            # Tableau des résultats
+            st.markdown("---")
+            results_df = pd.DataFrame(results)
+            st.dataframe(results_df[['type', 'amount', 'is_fraud', 'fraud_probability', 'risk_level']], 
+                        use_container_width=True)
     
     # Section Historique (visible dans tous les modes)
-    # if len(st.session_state.prediction_history) > 0:
-    #     st.markdown("---")
-    #     st.header("📈 Historique des Prédictions")
+    if len(st.session_state.prediction_history) > 0:
+        st.markdown("---")
+        st.header("📈 Historique des Prédictions")
         
-    #     fig_history = display_prediction_history(st.session_state.prediction_history)
-    #     if fig_history:
-    #         st.plotly_chart(fig_history, use_container_width=True)
+        fig_history = display_prediction_history(st.session_state.prediction_history)
+        if fig_history:
+            st.plotly_chart(fig_history, use_container_width=True)
         
-    #     # Statistiques de l'historique
-    #     col1, col2, col3 = st.columns(3)
+        # Statistiques de l'historique
+        col1, col2, col3 = st.columns(3)
         
-    #     with col1:
-    #         avg_prob = np.mean([p['fraud_probability'] for p in st.session_state.prediction_history])
-    #         st.metric("Probabilité Moyenne", f"{avg_prob*100:.2f}%")
+        with col1:
+            avg_prob = np.mean([p['fraud_probability'] for p in st.session_state.prediction_history])
+            st.metric("Probabilité Moyenne", f"{avg_prob*100:.2f}%")
         
-    #     with col2:
-    #         fraud_count = sum(1 for p in st.session_state.prediction_history if p['is_fraud'])
-    #         st.metric("Total Fraudes", fraud_count)
+        with col2:
+            fraud_count = sum(1 for p in st.session_state.prediction_history if p['is_fraud'])
+            st.metric("Total Fraudes", fraud_count)
         
-    #     with col3:
-    #         high_risk = sum(1 for p in st.session_state.prediction_history if p['risk_level'] == 'ÉLEVÉ')
-    #         st.metric("Alertes Élevées", high_risk)
+        with col3:
+            high_risk = sum(1 for p in st.session_state.prediction_history if p['risk_level'] == 'ÉLEVÉ')
+            st.metric("Alertes Élevées", high_risk)
 
 if __name__ == "__main__":
     main()
