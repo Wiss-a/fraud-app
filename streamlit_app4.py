@@ -304,14 +304,9 @@ def main():
                 st.subheader("Informations Générales")
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    step = st.number_input(
-                            "Step (Heure)",
-                            min_value=1,
-                            max_value=1,
-                            value=1,
-                            disabled=True,
-                            help="Unité de temps (1 step = 1 heure)"
-                        )
+                    step = 1
+                    st.markdown("⏱️ **Step (Heure)** : 1 (fixe)")
+
 
                 with col_b:
                     amount = st.number_input("Montant (€)", min_value=0.0, value=10000.0, step=100.0,
