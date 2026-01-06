@@ -297,11 +297,10 @@ def main():
         col_left, col_right = st.columns([1, 1])
         
         with col_left:
-            st.header("Formulaire de Transaction")
+            st.header("💰 Informations de Transaction")
             
             with st.form("transaction_form"):
                 # Informations Générales - en colonnes
-                st.subheader("Informations Générales")
                 col_a, col_b = st.columns(2)
                 with col_a:
                     step = 1
