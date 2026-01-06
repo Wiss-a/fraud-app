@@ -9,4 +9,4 @@ pytz==2025.2
 threadpoolctl==3.6.0
 six==1.17.0
 tzdata==2025.3
-streamlit==1.26.0   # or whatever version you used locally
+streamlit==1.52.2  
