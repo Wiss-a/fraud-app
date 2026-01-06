@@ -18,28 +18,16 @@ st.set_page_config(
 # Styles CSS personnalisés
 st.markdown("""
     <style>
-    .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    }
-
     .main-header {
         font-size: 3rem;
         font-weight: bold;
+        color: #1f77b4;
+        text-align: center;
+        padding: 20px;
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin: 0;
     }
-
-    .icon-left,
-    .icon-right {
-        font-size: 3rem;
-        color: #1f77b4;   /* any color you like */
-    }
-
     .metric-card {
         background-color: #f0f2f6;
         padding: 20px;
@@ -80,6 +68,20 @@ st.markdown("""
     .stTabs [aria-selected="true"] {
         background-color: #667eea;
         color: white;
+    }
+    
+    /* Formulaire compact */
+    [data-testid="stForm"] {
+        padding: 0;
+    }
+    [data-testid="stForm"] h3 {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+    [data-testid="stForm"] .stNumberInput,
+    [data-testid="stForm"] .stSelectbox {
+        margin-bottom: 5px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -257,30 +259,24 @@ def display_results(result, amount, type_transaction, oldbalance_org, newbalance
                   use_container_width=True)
     
     # Détails de la transaction
-    # st.markdown("---")
-    # st.subheader("📋 Détails")
+    st.markdown("---")
+    st.subheader("📋 Détails")
     
-    # st.write("**Informations de Base:**")
-    # st.write(f"- Type: {type_transaction}")
-    # st.write(f"- Montant: {amount:,.2f} €")
-    # st.write(f"- Step: {step}")
+    st.write("**Informations de Base:**")
+    st.write(f"- Type: {type_transaction}")
+    st.write(f"- Montant: {amount:,.2f} €")
+    st.write(f"- Step: {step}")
     
-    # st.write("**Analyse des Comptes:**")
-    # balance_change_orig = oldbalance_org - newbalance_orig
-    # balance_change_dest = newbalance_dest - oldbalance_dest
-    # st.write(f"- Variation Origine: {balance_change_orig:,.2f} €")
-    # st.write(f"- Variation Destination: {balance_change_dest:,.2f} €")
-    # st.write(f"- Ratio Montant/Solde: {amount/(oldbalance_org+1)*100:.2f}%")
+    st.write("**Analyse des Comptes:**")
+    balance_change_orig = oldbalance_org - newbalance_orig
+    balance_change_dest = newbalance_dest - oldbalance_dest
+    st.write(f"- Variation Origine: {balance_change_orig:,.2f} €")
+    st.write(f"- Variation Destination: {balance_change_dest:,.2f} €")
+    st.write(f"- Ratio Montant/Solde: {amount/(oldbalance_org+1)*100:.2f}%")
 
 def main():
     # En-tête
-    st.markdown("""
-    <div class="header-container">
-        <span class="icon-left">🔒</span>
-        <h1 class="main-header">Système de Détection de Fraude</h1>
-        <span class="icon-right">💳</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🔒 Système de Détection de Fraude</h1>', unsafe_allow_html=True)
     
     # Chargement du modèle
     model, scaler, error = load_model_and_scaler()
@@ -289,7 +285,9 @@ def main():
         st.error(f"❌ Erreur lors du chargement du modèle: {error}")
         st.info("Assurez-vous que les fichiers 'best_fraud_detection_model.pkl' et 'scaler.pkl' sont dans le même répertoire.")
         return
- 
+    
+    st.success("✅ Modèle chargé avec succès !")
+    st.markdown("---")
     
     # Initialiser l'état de session pour les résultats
     if 'current_result' not in st.session_state:
@@ -308,31 +306,42 @@ def main():
             st.header("Formulaire de Transaction")
             
             with st.form("transaction_form"):
+                # Informations Générales - en colonnes
                 st.subheader("Informations Générales")
-                step = st.number_input("Step (Heure)", min_value=0, max_value=744, value=1, 
-                                      help="Unité de temps (1 step = 1 heure)")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    step = st.number_input("Step (Heure)", min_value=0, max_value=744, value=1, 
+                                          help="Unité de temps (1 step = 1 heure)")
+                with col_b:
+                    amount = st.number_input("Montant (€)", min_value=0.0, value=10000.0, step=100.0,
+                                            help="Montant de la transaction")
+                
                 type_transaction = st.selectbox(
                     "Type de Transaction",
                     ["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
                 )
-                amount = st.number_input("Montant (€)", min_value=0.0, value=10000.0, step=100.0,
-                                        help="Montant de la transaction")
                 
-                st.markdown("---")
+                # Comptes en colonnes
                 st.subheader("Compte Origine")
-                oldbalance_org = st.number_input("Solde Initial", min_value=0.0, value=50000.0, 
-                                                step=1000.0, key="old_orig")
-                newbalance_orig = st.number_input("Nouveau Solde", min_value=0.0, value=40000.0, 
-                                                 step=1000.0, key="new_orig")
+                col_c, col_d = st.columns(2)
+                with col_c:
+                    oldbalance_org = st.number_input("Solde Initial", min_value=0.0, value=50000.0, 
+                                                    step=1000.0, key="old_orig")
+                with col_d:
+                    newbalance_orig = st.number_input("Nouveau Solde", min_value=0.0, value=40000.0, 
+                                                     step=1000.0, key="new_orig")
                 
-                st.markdown("---")
                 st.subheader("Compte Destination")
-                oldbalance_dest = st.number_input("Solde Initial", min_value=0.0, value=0.0, 
-                                                 step=1000.0, key="old_dest")
-                newbalance_dest = st.number_input("Nouveau Solde", min_value=0.0, value=10000.0, 
-                                                 step=1000.0, key="new_dest")
+                col_e, col_f = st.columns(2)
+                with col_e:
+                    oldbalance_dest = st.number_input("Solde Initial", min_value=0.0, value=0.0, 
+                                                     step=1000.0, key="old_dest")
+                with col_f:
+                    newbalance_dest = st.number_input("Nouveau Solde", min_value=0.0, value=10000.0, 
+                                                     step=1000.0, key="new_dest")
                 
                 # Bouton de soumission
+                st.markdown("<br>", unsafe_allow_html=True)
                 submitted = st.form_submit_button("🔍 Analyser la Transaction", type="primary", use_container_width=True)
                 
                 if submitted:
