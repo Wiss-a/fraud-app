@@ -19,14 +19,25 @@ st.set_page_config(
 st.markdown("""
     <style>
     .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-size: 3.5rem;
+        font-weight: 700;
         text-align: center;
-        padding: 20px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+        line-height: 1.2;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #64748b;
+        margin-top: -20px;
+        margin-bottom: 40px;
+        font-weight: 400;
     }
     .metric-card {
         background-color: #f0f2f6;
@@ -258,26 +269,11 @@ def display_results(result, amount, type_transaction, oldbalance_org, newbalance
                                           result['legit_probability']),
                   use_container_width=True)
     
-    # Détails de la transaction
-    st.markdown("---")
-    st.subheader("📋 Détails")
     
-    st.write("**Informations de Base:**")
-    st.write(f"- Type: {type_transaction}")
-    st.write(f"- Montant: {amount:,.2f} €")
-    st.write(f"- Step: {step}")
-    
-    st.write("**Analyse des Comptes:**")
-    balance_change_orig = oldbalance_org - newbalance_orig
-    balance_change_dest = newbalance_dest - oldbalance_dest
-    st.write(f"- Variation Origine: {balance_change_orig:,.2f} €")
-    st.write(f"- Variation Destination: {balance_change_dest:,.2f} €")
-    st.write(f"- Ratio Montant/Solde: {amount/(oldbalance_org+1)*100:.2f}%")
-
 def main():
     # En-tête
-    st.markdown('<h1 class="main-header">🔒 Système de Détection de Fraude</h1>', unsafe_allow_html=True)
-    
+    st.markdown('<h1 class="main-header">Système Intelligent de Détection de Fraude</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Analyse en temps réel des transactions financières avec Machine Learning</p>', unsafe_allow_html=True)    
     # Chargement du modèle
     model, scaler, error = load_model_and_scaler()
     
