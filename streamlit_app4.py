@@ -262,7 +262,7 @@ def display_results(result, amount, type_transaction, oldbalance_org, newbalance
 
 def main():
     # En-tête
-    st.markdown('<h1 class="main-header">🔒 Système de Détection de Fraude 💳</h1>', unsafe_allow_html=True)
+    st.markdown('🔒<h1 class="main-header"> Système de Détection de Fraude </h1>💳', unsafe_allow_html=True)
     
     # Chargement du modèle
     model, scaler, error = load_model_and_scaler()
