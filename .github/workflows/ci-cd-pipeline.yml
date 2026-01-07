@@ -293,7 +293,7 @@ jobs:
         echo "🔔 Configuring alerts..."
         echo "✅ Alerts will be sent to: ${{ secrets.ALERT_EMAIL }}"
 
-# ==================== SCHEDULED MODEL RETRAINING ====================
+
   scheduled-model-check:
     name: Weekly Model Performance Check
     runs-on: ubuntu-latest
