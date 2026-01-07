@@ -264,7 +264,6 @@ jobs:
         echo "2. Check Azure Monitor for application insights" >> $GITHUB_STEP_SUMMARY
         echo "3. Review logs if needed" >> $GITHUB_STEP_SUMMARY
 
-  # ==================== MONITORING SETUP ====================
   setup-monitoring:
     name: Configure Monitoring & Alerts
     runs-on: ubuntu-latest
