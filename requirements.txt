@@ -11,3 +11,5 @@ six==1.17.0
 tzdata==2025.3
 streamlit==1.52.2  
 plotly==6.2.0
+lightgbm>=4.0.0
+xgboost>=2.0.0

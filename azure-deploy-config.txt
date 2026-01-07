@@ -1,0 +1,32 @@
+# Azure Web App Deployment Configuration
+
+# This file is used by Azure App Service for deploying the Streamlit application
+
+# Runtime Configuration
+PYTHON_VERSION=3.11
+
+# Startup Command (for Azure App Service)
+# Use this in Azure Portal -> Configuration -> General Settings -> Startup Command
+# streamlit run streamlit_app4.py --server.port 8000 --server.address 0.0.0.0
+
+# Environment Variables (Configure in Azure Portal)
+# These should be set in Azure Portal -> Configuration -> Application Settings
+
+# STREAMLIT_SERVER_PORT=8000
+# STREAMLIT_SERVER_ADDRESS=0.0.0.0
+# STREAMLIT_SERVER_HEADLESS=true
+# STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
+# Application Insights (Optional - for monitoring)
+# APPINSIGHTS_INSTRUMENTATIONKEY=<your-key>
+# APPLICATIONINSIGHTS_CONNECTION_STRING=<your-connection-string>
+
+# Scaling Configuration
+# - Minimum instances: 1
+# - Maximum instances: 3 (adjust based on load)
+# - Scale out rule: CPU > 70%
+# - Scale in rule: CPU < 30%
+
+# Health Check
+# Health check path: /_stcore/health
+# Health check interval: 30 seconds
