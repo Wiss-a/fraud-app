@@ -296,7 +296,7 @@ def main():
     # # Bouton pour réinitialiser l'historique
     # if st.sidebar.button("🔄 Réinitialiser l'Historique"):
     #     st.session_state.prediction_history = []
-    #     st.rerun()
+    #     st.rerun()yhtgfrghj
     
     # Mode Saisie Manuelle
     if input_mode == "📝 Saisie Manuelle":
